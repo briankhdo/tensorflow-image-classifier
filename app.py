@@ -186,7 +186,7 @@ def upload():
 
         byte_io = BytesIO()
         org_image.save(byte_io, 'JPEG')
-        # byte_io.seek(0)
+        byte_io.seek(0, 0)
 
         encoded_image = base64.b64encode(byte_io.getvalue())
         return render_template('upload.html', image=encoded_image)
