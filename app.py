@@ -161,9 +161,6 @@ def upload():
                 class_name = 'unknown'
                 img_fraction = 1.0
 
-                fontsize = 16
-                font = ImageFont.truetype("arial.ttf", fontsize)
-
                 posibility = 1
                 if len(face_classes) > 0:
                     possible_class = face_classes[0]
@@ -173,7 +170,7 @@ def upload():
                 draw.rectangle(area, fill=None, outline=(0,255,0,120))
                 draw.text([(box.left(), box.top() - 20)],
                     class_name, 
-                    fill=(0,255,0,120), font=font)
+                    fill=(0,255,0,120))
                 draw.text([(box.left(), box.top() - 10)],
                     str(posibility), 
                     fill=(0,255,0,120))
