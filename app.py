@@ -163,6 +163,7 @@ def upload():
 
                 fontsize = 2
                 box_size = box.width()
+                font = ImageFont.truetype("arial.ttf", fontsize)
                 while font.getsize(class_name)[0] < box_size*img_fraction:
                     # iterate until the text size is just larger than the criteria
                     fontsize += 1
