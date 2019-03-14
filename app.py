@@ -110,6 +110,10 @@ def results_json():
             message="Invalid job_id"
         )
 
+@app.route('/')
+def index():
+   return render_template(upload.html’)
+
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files['image']
