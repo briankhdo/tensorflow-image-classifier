@@ -55,13 +55,15 @@ with classification_graph.as_default():
 print('Model Loaded')
 
 def detect_faces(image):
+    pil_image = image.convert('RGB')
+    open_cv_image = np.array(pil_image)
     '''Plots the object detection result for a given image.'''
-    bbes = align_dlib.getFaceBoundingBoxes(image)
+    bbes = align_dlib.getFaceBoundingBoxes(open_cv_image)
 
     aligned_images = []
     if bbes is not None:
         for bb in bbes:
-            aligned = align_dlib.align(crop_dim, image, bb, landmarkIndices=AlignDlib.INNER_EYES_AND_BOTTOM_LIP)
+            aligned = align_dlib.align(crop_dim, open_cv_image, bb, landmarkIndices=AlignDlib.INNER_EYES_AND_BOTTOM_LIP)
             if aligned is not None:
                 aligned = cv2.cvtColor(aligned, cv2.COLOR_BGR2RGB)
                 image_data = cv2.imencode('.jpg', aligned)[1].tostring()
@@ -83,7 +85,7 @@ def classify_faces(faces):
         max_score = 0
         max_human_string = ''
         for node_id in top_k:
-            human_string = label_lines[node_id]
+            human_string = label_lines[node_id].replace("user_checkin_")
             score = predictions[0][node_id]
             if max_score < score:
                 max_score = score
