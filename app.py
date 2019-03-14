@@ -59,11 +59,12 @@ def detect_faces(image):
     bbes = align_dlib.getFaceBoundingBoxes(image)
     aligned_images = []
     for bb in bbes:
-        aligned = align_dlib.align(crop_dim, image, bb, landmarkIndices=AlignDlib.INNER_EYES_AND_BOTTOM_LIP)
-        if aligned is not None:
-            aligned = cv2.cvtColor(aligned, cv2.COLOR_BGR2RGB)
-            image_data = cv2.imencode('.jpg', aligned)[1].tostring()
-            aligned_images.append(image_data)
+        if bb is not None:
+            aligned = align_dlib.align(crop_dim, image, bb, landmarkIndices=AlignDlib.INNER_EYES_AND_BOTTOM_LIP)
+            if aligned is not None:
+                aligned = cv2.cvtColor(aligned, cv2.COLOR_BGR2RGB)
+                image_data = cv2.imencode('.jpg', aligned)[1].tostring()
+                aligned_images.append(image_data)
     return aligned_images, bbes
 
 label_lines = [line.rstrip() for line 
