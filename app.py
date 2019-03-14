@@ -57,9 +57,10 @@ print('Model Loaded')
 def detect_faces(image):
     '''Plots the object detection result for a given image.'''
     bbes = align_dlib.getFaceBoundingBoxes(image)
+
     aligned_images = []
-    for bb in bbes:
-        if bb is not None:
+    if bbes is not None:
+        for bb in bbes:
             aligned = align_dlib.align(crop_dim, image, bb, landmarkIndices=AlignDlib.INNER_EYES_AND_BOTTOM_LIP)
             if aligned is not None:
                 aligned = cv2.cvtColor(aligned, cv2.COLOR_BGR2RGB)
