@@ -70,6 +70,14 @@ def preprocess_image_multiple(input_path, output_path, crop_dim):
         else:
             logger.warning("Skipping filename: {}".format(input_path))
 
+def extract_faces(filename, crop_dim):
+    """
+    Detect face, return faces image data
+    :param filename: file path to iamge
+    :param crop_dim: dimensions to crop image to
+    """
+    return _process_image_multiple(filename, crop_dim)
+
 
 def _process_image(filename, crop_dim):
     image = None
@@ -129,7 +137,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=str, action='store', default='output', dest='output_dir')
     parser.add_argument('--crop-dim', type=int, action='store', default=180, dest='crop_dim',
                         help='Size to crop images to')
-    parser.add_argument('--multiple-faces', type:str, action='store', default='false', dest='multiple_faces')
+    parser.add_argument('--multiple-faces', type=str, action='store', default='false', dest='multiple_faces')
 
     args = parser.parse_args()
 
