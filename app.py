@@ -4,7 +4,7 @@ from io import BytesIO
 import decimal
 import flask.json
 from flask import Flask, send_file, request, jsonify, render_template
-from PIL import Image, ImageDraw, ExifTags
+from PIL import Image, ImageDraw, ExifTags, ImageFont
 import requests
 import numpy as np
 import tensorflow as tf
@@ -148,8 +148,6 @@ def upload():
         # if os.path.isdir(folder_name) == False:
         #     os.mkdir(folder_name)
 
-        print(boxes)
-
         if boxes is not None:
 
             for index, box in enumerate(boxes):
@@ -161,6 +159,18 @@ def upload():
                 ]
                 face_classes = classify_results[index]
                 class_name = 'unknown'
+                img_fraction = 1.0
+
+                fontsize = 2
+                box_size = box.width()
+                while font.getsize(class_name)[0] < box_size*img_fraction:
+                    # iterate until the text size is just larger than the criteria
+                    fontsize += 1
+
+                # optionally de-increment to be sure it is less than criteria
+                fontsize -= 1
+                font = ImageFont.truetype("arial.ttf", fontsize)
+
                 posibility = 1
                 if len(face_classes) > 0:
                     possible_class = face_classes[0]
@@ -170,7 +180,7 @@ def upload():
                 draw.rectangle(area, fill=None, outline=(0,255,0,120))
                 draw.text([(box.left(), box.top() - 20)],
                     class_name, 
-                    fill=(0,255,0,120))
+                    fill=(0,255,0,120), font=font)
                 draw.text([(box.left(), box.top() - 10)],
                     str(posibility), 
                     fill=(0,255,0,120))
