@@ -70,6 +70,14 @@ def preprocess_image_multiple(input_path, output_path, crop_dim):
         else:
             logger.warning("Skipping filename: {}".format(input_path))
 
+def extract_faces(filename, crop_dim):
+    """
+    Detect face, return faces image data
+    :param filename: file path to iamge
+    :param crop_dim: dimensions to crop image to
+    """
+    return _process_image_multiple(filename, crop_dim)
+
 
 def _process_image(filename, crop_dim):
     image = None
