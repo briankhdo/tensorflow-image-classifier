@@ -3,7 +3,7 @@ import re
 from io import BytesIO
 import decimal
 import flask.json
-from flask import Flask, send_file, request, jsonify
+from flask import Flask, send_file, request, jsonify, render_template
 from PIL import Image, ImageDraw, ExifTags
 import requests
 import numpy as np
