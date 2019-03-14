@@ -85,7 +85,7 @@ def classify_faces(faces):
         max_score = 0
         max_human_string = ''
         for node_id in top_k:
-            human_string = label_lines[node_id].replace("user_checkin_")
+            human_string = label_lines[node_id].replace("user_checkin_", "")
             score = predictions[0][node_id]
             if max_score < score:
                 max_score = score
