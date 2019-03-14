@@ -112,17 +112,18 @@ def upload():
     if file:
         data = file.read()
         org_image = Image.open(BytesIO(data))
-        for orientation in ExifTags.TAGS.keys() : 
-            if ExifTags.TAGS[orientation]=='Orientation' : break
-        if org_image._getexif() != None:
-            exif=dict(org_image._getexif().items())
-            if orientation in exif:
-                if   exif[orientation] == 3 : 
-                    org_image=org_image.rotate(180, expand=True)
-                elif exif[orientation] == 6 : 
-                    org_image=org_image.rotate(270, expand=True)
-                elif exif[orientation] == 8 : 
-                    org_image=org_image.rotate(90, expand=True)
+        if hasattr(org_image, '_getexif'):
+            for orientation in ExifTags.TAGS.keys() : 
+                if ExifTags.TAGS[orientation]=='Orientation' : break
+            if org_image._getexif() != None:
+                exif=dict(org_image._getexif().items())
+                if orientation in exif:
+                    if   exif[orientation] == 3 : 
+                        org_image=org_image.rotate(180, expand=True)
+                    elif exif[orientation] == 6 : 
+                        org_image=org_image.rotate(270, expand=True)
+                    elif exif[orientation] == 8 : 
+                        org_image=org_image.rotate(90, expand=True)
 
         size = 800,800
         org_image.thumbnail(size,Image.ANTIALIAS)
