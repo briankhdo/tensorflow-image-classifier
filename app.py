@@ -111,6 +111,11 @@ def results_json():
             message="Invalid job_id"
         )
 
+@app.route('/images/<path:path>')
+def send_js(path):
+    return send_from_directory('images', path)
+
+
 @app.route('/')
 def index():
    return render_template('upload.html')
@@ -185,11 +190,10 @@ def upload():
                 fill=(0,255,0,120))
 
         byte_io = BytesIO()
-        org_image.save(byte_io, 'JPEG')
-        byte_io.seek(0, 0)
+        file_name = "./images/%s_result.jpg" % uuid.uuid4().hex
+        org_image.save(file_name, 'JPEG')
 
-        encoded_image = base64.b64encode(byte_io.getvalue())
-        return render_template('upload.html', image=encoded_image)
+        return render_template('upload.html', image=file_name)
         # return send_file(byte_io, mimetype='image/jpeg')
 
 
