@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import re
 from io import BytesIO
 import decimal
