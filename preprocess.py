@@ -137,7 +137,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=str, action='store', default='output', dest='output_dir')
     parser.add_argument('--crop-dim', type=int, action='store', default=180, dest='crop_dim',
                         help='Size to crop images to')
-    parser.add_argument('--multiple-faces', type:str, action='store', default='false', dest='multiple_faces')
+    parser.add_argument('--multiple-faces', type=str, action='store', default='false', dest='multiple_faces')
 
     args = parser.parse_args()
 
