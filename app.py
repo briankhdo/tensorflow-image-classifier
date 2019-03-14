@@ -184,11 +184,11 @@ def upload():
                 'Cannot detect faces', 
                 fill=(0,255,0,120))
 
-        # byte_io = BytesIO()
-        # org_image.save(byte_io, 'JPEG')
+        byte_io = BytesIO()
+        org_image.save(byte_io, 'JPEG')
         # byte_io.seek(0)
 
-        encoded_image = base64.b64encode(org_image.tobytes())
+        encoded_image = base64.b64encode(byte_io.getvalue())
         return render_template('upload.html', image=encoded_image)
         # return send_file(byte_io, mimetype='image/jpeg')
 
