@@ -112,7 +112,7 @@ def results_json():
 
 @app.route('/')
 def index():
-   return render_template(upload.html’)
+   return render_template('upload.html')
 
 @app.route('/upload', methods=['POST'])
 def upload():
