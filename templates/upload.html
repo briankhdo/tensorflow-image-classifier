@@ -7,6 +7,8 @@
     <input type="file" name="image" id="fileToUpload"><br/>
     <input type="submit" value="Upload Image" name="submit">
 </form>
-
+{% if image %}
+<img src="{{ image }}" style="max-width: 600px;"/>
+{% endif %}
 </body>
 </html>

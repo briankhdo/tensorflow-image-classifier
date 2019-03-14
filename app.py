@@ -12,6 +12,7 @@ import tensorflow as tf_classify
 import os
 import json
 import uuid
+import base64
 
 import cv2
 
@@ -187,7 +188,9 @@ def upload():
         org_image.save(byte_io, 'JPEG')
         byte_io.seek(0)
 
-        return send_file(byte_io, mimetype='image/jpeg')
+        encoded_image = base64.b64encode(byte_io)
+        return render_template('upload.html', image=encoded_image)
+        # return send_file(byte_io, mimetype='image/jpeg')
 
 
         # boxes = image[0].tolist()
