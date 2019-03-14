@@ -144,27 +144,34 @@ def upload():
 
         print(boxes)
 
-        for index, box in enumerate(boxes):
-            area = [
-                box.left(),
-                box.top(),
-                box.right(),
-                box.bottom()
-            ]
-            face_classes = classify_results[index]
-            class_name = 'unknown'
-            posibility = 1
-            if len(face_classes) > 0:
-                possible_class = face_classes[0]
-                class_name = possible_class[0]
-                posibility = possible_class[1]
+        if boxes is not None:
 
-            draw.rectangle(area, fill=None, outline=(0,255,0,120))
-            draw.text([(int(box[1] * width), int(box[0] * height) - 20)],
-                class_name, 
-                fill=(0,255,0,120))
-            draw.text([(int(box[1] * width), int(box[0] * height) - 10)],
-                str(posibility), 
+            for index, box in enumerate(boxes):
+                area = [
+                    box.left(),
+                    box.top(),
+                    box.right(),
+                    box.bottom()
+                ]
+                face_classes = classify_results[index]
+                class_name = 'unknown'
+                posibility = 1
+                if len(face_classes) > 0:
+                    possible_class = face_classes[0]
+                    class_name = possible_class[0]
+                    posibility = possible_class[1]
+
+                draw.rectangle(area, fill=None, outline=(0,255,0,120))
+                draw.text([(box.left(), box.top() - 20)],
+                    class_name, 
+                    fill=(0,255,0,120))
+                draw.text([(box.left(), box.top() - 10)],
+                    str(posibility), 
+                    fill=(0,255,0,120))
+
+        else:
+            draw.text([10, 10],
+                'Cannot detect faces', 
                 fill=(0,255,0,120))
 
         byte_io = BytesIO()
