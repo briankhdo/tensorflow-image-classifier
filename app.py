@@ -168,10 +168,13 @@ def upload():
                     posibility = possible_class[1]
 
                 draw.rectangle(area, fill=None, outline=(0,255,0,120))
-                draw.text([(box.left(), box.top() - 20)],
+                left = box.left()
+                if left < 0:
+                    left = 0
+                draw.text([(left, box.top() - 20)],
                     class_name, 
                     fill=(0,255,0,120))
-                draw.text([(box.left(), box.top() - 10)],
+                draw.text([(left, box.top() - 10)],
                     str(posibility), 
                     fill=(0,255,0,120))
 
