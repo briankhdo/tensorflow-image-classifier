@@ -1,6 +1,9 @@
 import tensorflow as tf
 import sys
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 # speicherorte fuer trainierten graph und labels in train.sh festlegen ##
 
@@ -75,7 +78,6 @@ def classify_image(image_path, image_output_dir):
         break
 
 if __name__ == '__main__':
-  logging.basicConfig(level=logging.INFO)
   parser = argparse.ArgumentParser(add_help=True)
   parser.add_argument('--input-dir', type=str, action='store', default='data', dest='input_dir')
   parser.add_argument('--output-dir', type=str, action='store', default='output', dest='output_dir')
