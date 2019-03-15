@@ -136,7 +136,7 @@ def _align_image(image, crop_dim):
 
 def _check_face(image, crop_dim):
     bb = align_dlib.getFaceBoundingBoxes(image)
-    if len(bb) > 0
+    if len(bb) > 0:
     return image
 
 def _align_image_multiple(image, crop_dim):
