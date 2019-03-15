@@ -97,12 +97,15 @@ def _process_check_face(filename, crop_dim):
     image = None
     aligned_image = None
 
-    image = _buffer_image(filename)
+    image, org_image = _buffer_image(filename)
 
     if image is not None:
         aligned_image = _check_face(image, crop_dim)
     else:
         raise IOError('Error buffering image: {}'.format(filename))
+
+    if aligned_image is not None:
+        aligned_image = org_image
 
     return aligned_image
 
@@ -122,9 +125,9 @@ def _process_image_multiple(filename, crop_dim):
 
 def _buffer_image(filename):
     logger.debug('Reading image: {}'.format(filename))
-    image = cv2.imread(filename, )
+    org_image = cv2.imread(filename, )
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    return image
+    return image, org_image
 
 
 def _align_image(image, crop_dim):
