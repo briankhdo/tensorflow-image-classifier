@@ -126,7 +126,7 @@ def _process_image_multiple(filename, crop_dim):
 def _buffer_image(filename):
     logger.debug('Reading image: {}'.format(filename))
     org_image = cv2.imread(filename, )
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = cv2.cvtColor(org_image, cv2.COLOR_BGR2RGB)
     return image, org_image
 
 
