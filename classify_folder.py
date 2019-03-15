@@ -71,7 +71,7 @@ def classify_image(image_path, image_output_dir):
         f= open(output_path,"wb")
         f.write(image_data)
         f.close()
-        puts "Written %s" % output_path
+        print("Written %s" % output_path)
         break
 
 if __name__ == '__main__':
