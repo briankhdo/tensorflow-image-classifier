@@ -3,7 +3,7 @@ import re
 from io import BytesIO
 import decimal
 import flask.json
-from flask import Flask, send_file, request, jsonify, render_template
+from flask import Flask, send_file, request, jsonify, render_template, send_from_directory
 from PIL import Image, ImageDraw, ExifTags, ImageFont
 import requests
 import numpy as np
@@ -193,7 +193,7 @@ def upload():
         file_name = "./images/%s_result.jpg" % uuid.uuid4().hex
         org_image.save(file_name, 'JPEG')
 
-        return render_template('upload.html', image=file_name)
+        return render_template('upload.html', image=file_name, detections=classify_results)
         # return send_file(byte_io, mimetype='image/jpeg')
 
 
