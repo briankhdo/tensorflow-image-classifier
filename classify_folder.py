@@ -27,7 +27,7 @@ with tf.gfile.FastGFile("tf_files/retrained_graph.pb", 'rb') as f:
   
   #https://github.com/Hvass-Labs/TensorFlow-Tutorials/blob/master/inception.py ; ab zeile 276
 
-print "Model loaded"
+print("Model loaded")
 
 def main(input_dir, output_dir):
   start_time = time.time()
