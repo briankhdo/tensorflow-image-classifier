@@ -48,7 +48,7 @@ def preprocess_image(input_path, output_path, crop_dim):
     :param output_path: Path to write processed image
     :param crop_dim: dimensions to crop image to
     """
-    image = _process_image(input_path, crop_dim)
+    image = _process_check_face(input_path, crop_dim)
     if image is not None:
         logger.debug('Writing processed file: {}'.format(output_path))
         cv2.imwrite(output_path, image)
@@ -137,7 +137,9 @@ def _align_image(image, crop_dim):
 def _check_face(image, crop_dim):
     bb = align_dlib.getFaceBoundingBoxes(image)
     if len(bb) > 0:
-    return image
+      return image
+    else:
+      return None
 
 def _align_image_multiple(image, crop_dim):
     bbes = align_dlib.getFaceBoundingBoxes(image)
