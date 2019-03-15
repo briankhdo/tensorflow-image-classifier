@@ -76,7 +76,7 @@ def classify_image(image_path, image_output_dir):
         human_string = "unknown"
       print('%s (score = %.5f)' % (human_string, score))
       output_dir = os.path.join(image_output_dir, human_string)
-      output_path = os.path.join(image_output_dir, human_string, "%s_%.2f" % (os.path.basename(image_path), score * 100))
+      output_path = os.path.join(image_output_dir, human_string, "%s_%.2f.png" % (os.path.basename(image_path).replace(".png", ""), score * 100))
       if not os.path.exists(output_dir):
         os.makedirs(output_dir)
       print("Writing %s" % output_path)
