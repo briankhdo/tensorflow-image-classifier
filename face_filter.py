@@ -48,6 +48,7 @@ def preprocess_image(input_path, output_path, crop_dim):
     :param output_path: Path to write processed image
     :param crop_dim: dimensions to crop image to
     """
+    print("Processing %s" % input_path)
     image = _process_check_face(input_path, crop_dim)
     if image is not None:
         logger.debug('Writing processed file: {}'.format(output_path))
