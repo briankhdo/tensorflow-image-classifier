@@ -72,14 +72,19 @@ def classify_image(image_path, image_output_dir):
     for node_id in top_k:
       human_string = label_lines[node_id]
       score = predictions[0][node_id]
-      if score * 100 > 10:
-        print('%s (score = %.5f)' % (human_string, score))
-        output_path = os.path.join(image_output_dir, human_string, "%s_%.2f" % (os.path.basename(image_path), score * 100))
-        f= open(output_path,"wb")
-        f.write(image_data)
-        f.close()
-        print("Written %s" % output_path)
-        break
+      if score * 100 < 10:
+        human_string = "unknown"
+      print('%s (score = %.5f)' % (human_string, score))
+      output_dir = os.path.join(image_output_dir, human_string)
+      output_path = os.path.join(image_output_dir, human_string, "%s_%.2f" % (os.path.basename(image_path), score * 100))
+      if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+      print("Writing %s" % output_path)
+      f = open(output_path,"wb")
+      f.write(image_data)
+      f.close()
+      print("Written %s" % output_path)
+      break
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(add_help=True)
