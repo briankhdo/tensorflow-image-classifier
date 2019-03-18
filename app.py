@@ -477,7 +477,7 @@ def upload():
             images.append(file_name)
 
             detection = {
-                "image": filename,
+                "image": file_name,
                 "detections": classify_results,
                 "model_name": model_name
             }
