@@ -10,14 +10,13 @@
 {% for detection in detection_data %}
 {% set detections = detection.get("detections") %}
 {% set image = detection["image"] %}
-<h4>{{ detection["model_name"] }}</h4>
+<h2>MODEL {{ detection["model_name"] }}</h2>
 <img src="{{ image }}" style="max-width: 600px;"/><br>
 {% if detections %}
 Found {{ detections|length }} faces<br>
 {% for d in detections %}
 <strong>{{ loop.index }}. {{ d.0.0 }}<strong><br>
 Possibility: {{ d.0.1 }}%<br><br>
-Number of photos: {{ d.0.2 }}<br><br>
 {% endfor %}
 {% endif %}
 {% endfor %}
