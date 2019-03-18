@@ -334,29 +334,35 @@ for PATH_TO_IMAGE_LABELS in LABEL_PATHS:
                    in tf.gfile.GFile(PATH_TO_IMAGE_LABELS)])
 
 
-def classify_faces(faces, prediction_sess, label_lines):
+def classify_faces(faces, classification_graph, label_lines):
+    prediction_sess = None
+    softmax_tensor = None
     results = []
-    for image in faces:
-        predictions = prediction_sess.run(softmax_tensor, {'DecodeJpeg/contents:0': image})
-        # gibt prediction values in array zuerueck:
-        top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
-        print(top_k)
-        result = []
-        max_score = 0
-        max_human_string = ''
-        for node_id in top_k:
-            human_string = label_lines[node_id].replace("user checkin ", "")
-            score = predictions[0][node_id]
-            if max_score < score:
-                max_score = score
-                max_human_string = human_string
-            if score >= 0.2:
-                data = [human_string, score*100.0]
-                result.append(data)
-        if len(result) == 0:
-            data = [max_human_string, max_score*100.0]
-            result.append(data)
-        results.append(result)
+    with classification_graph.as_default():
+        with tf.Session(config=config,graph=classification_graph) as sess:
+            prediction_sess = sess
+            softmax_tensor = sess.graph.get_tensor_by_name('final_result:0')
+            for image in faces:
+                predictions = prediction_sess.run(softmax_tensor, {'DecodeJpeg/contents:0': image})
+                # gibt prediction values in array zuerueck:
+                top_k = predictions[0].argsort()[-len(predictions[0]):][::-1]
+                print(top_k)
+                result = []
+                max_score = 0
+                max_human_string = ''
+                for node_id in top_k:
+                    human_string = label_lines[node_id].replace("user checkin ", "")
+                    score = predictions[0][node_id]
+                    if max_score < score:
+                        max_score = score
+                        max_human_string = human_string
+                    if score >= 0.2:
+                        data = [human_string, score*100.0]
+                        result.append(data)
+                if len(result) == 0:
+                    data = [max_human_string, max_score*100.0]
+                    result.append(data)
+                results.append(result)
     return results
 
 @app.route('/results/json')
@@ -411,8 +417,8 @@ def upload():
 
         for index, model_name in enumerate(CKPT_MODEL_NAME):
 
-            prediction_sess = prediction_sesses[index]
-            classify_results = classify_faces(faces, prediction_sess, label_lines[index])
+            classification_graph = classification_graphs[index]
+            classify_results = classify_faces(faces, classification_graph, label_lines[index])
             detections.append(classify_results)
 
             image = copy.copy(org_image)
