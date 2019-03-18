@@ -295,7 +295,7 @@ for ckpt_path in CKPT_PATHS:
     classification_graph = tf.Graph()
     with classification_graph.as_default():
         graph_def = tf.GraphDef()
-        with tf.gfile.GFile(PATH_TO_IMAGE_CKPT, 'rb') as fid:
+        with tf.gfile.GFile(ckpt_path, 'rb') as fid:
             graph_def.ParseFromString(fid.read())
             tf.import_graph_def(graph_def, name='')
     classification_graphs.append(classification_graph)
