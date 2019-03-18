@@ -328,11 +328,13 @@ def detect_faces(image):
                 aligned_images.append(image_data)
     return aligned_images, bbes
 
-label_lines = [line.rstrip() for line 
-                   in tf.gfile.GFile(PATH_TO_IMAGE_LABELS)]
+label_lines = []
+for PATH_TO_IMAGE_LABELS in LABEL_PATHS:
+    label_lines.append([line.rstrip() for line 
+                   in tf.gfile.GFile(PATH_TO_IMAGE_LABELS)])
 
 
-def classify_faces(faces, prediction_sess):
+def classify_faces(faces, prediction_sess, label_lines):
     results = []
     for image in faces:
         predictions = prediction_sess.run(softmax_tensor, {'DecodeJpeg/contents:0': image})
@@ -410,7 +412,7 @@ def upload():
         for index, model_name in enumerate(CKPT_MODEL_NAME):
 
             prediction_sess = prediction_sesses[index]
-            classify_results = classify_faces(faces, prediction_sess)
+            classify_results = classify_faces(faces, prediction_sess, label_lines[index])
             detections.append(classify_results)
 
             image = copy.copy(org_image)
