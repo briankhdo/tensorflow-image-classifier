@@ -7,13 +7,19 @@
     <input type="file" name="image" id="fileToUpload"><br/>
     <input type="submit" value="Upload Image" name="submit">
 </form>
-{% if image %}
+{% for detection in detection_data %}
+{% detections = detection["detections"] %}
+{% image = detection["image"] %}
+<h4>{{ detection["model_name"] }}</h4>
+{% if detetections %}
 <img src="{{ image }}" style="max-width: 600px;"/><br>
 Found {{ detections|length }} faces<br>
 {% for detection in detections %}
 <strong>{{ loop.index }}. {{ detection.0.0 }}<strong><br>
 Possibility: {{ detection.0.1 }}%<br><br>
+Possibility: {{ detection.0.2 }}%<br><br>
 {% endfor %}
 {% endif %}
+{% endfor %}
 </body>
 </html>

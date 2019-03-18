@@ -13,6 +13,7 @@ import os
 import json
 import uuid
 import base64
+import copy
 
 import cv2
 
@@ -269,11 +270,12 @@ num_of_photos = {'user_checkin_anh.ph': 61,
 'user_checkin_yentt': 4,
 'user_checkin_yentt89': 27}
 
-PATH_TO_IMAGE_CKPT = './tf_files_mar16/retrained_graph.pb'
+CKPT_MODEL_NAME = ['Mar 15', 'Mar 16']
+CKPT_PATHS = ['./tf_files/retrained_graph.pb', './tf_files_mar16/retrained_graph.pb']
 
 crop_dim = 180
 
-PATH_TO_IMAGE_LABELS = './tf_files_mar16/retrained_labels.txt'
+LABEL_PATHS = ['./tf_files/retrained_labels.txt', './tf_files_mar16/retrained_labels.txt']
 
 align_dlib = AlignDlib(os.path.join(os.path.dirname(__file__), 'shape_predictor_68_face_landmarks.dat'))
 
@@ -286,19 +288,27 @@ def image2array(image):
 def array2image(arr):
     return Image.fromarray(np.uint8(arr))
 
-classification_graph = tf.Graph()
-with classification_graph.as_default():
-    graph_def = tf.GraphDef()
-    with tf.gfile.GFile(PATH_TO_IMAGE_CKPT, 'rb') as fid:
-        graph_def.ParseFromString(fid.read())
-        tf.import_graph_def(graph_def, name='')
+classification_graphs = []
+prediction_sesses = []
+softmax_tensors = []
+for ckpt_path in CKPT_PATHS:
+    classification_graph = tf.Graph()
+    with classification_graph.as_default():
+        graph_def = tf.GraphDef()
+        with tf.gfile.GFile(PATH_TO_IMAGE_CKPT, 'rb') as fid:
+            graph_def.ParseFromString(fid.read())
+            tf.import_graph_def(graph_def, name='')
+    classification_graphs.append(classification_graph)
 
-prediction_sess = None
-softmax_tensor = None
-with classification_graph.as_default():
-    with tf.Session(config=config,graph=classification_graph) as sess:
-        prediction_sess = sess
-        softmax_tensor = sess.graph.get_tensor_by_name('final_result:0')
+    prediction_sess = None
+    softmax_tensor = None
+    with classification_graph.as_default():
+        with tf.Session(config=config,graph=classification_graph) as sess:
+            prediction_sess = sess
+            softmax_tensor = sess.graph.get_tensor_by_name('final_result:0')
+
+    prediction_sesses.append(prediction_sess)
+    softmax_tensors.append(softmax_tensor)
 
 print('Model Loaded')
 
@@ -322,7 +332,7 @@ label_lines = [line.rstrip() for line
                    in tf.gfile.GFile(PATH_TO_IMAGE_LABELS)]
 
 
-def classify_faces(faces):
+def classify_faces(faces, prediction_sess):
     results = []
     for image in faces:
         predictions = prediction_sess.run(softmax_tensor, {'DecodeJpeg/contents:0': image})
@@ -391,61 +401,71 @@ def upload():
         
         faces, boxes = detect_faces(org_image)
 
-        classify_results = classify_faces(faces)
+        images = []
 
-        draw = ImageDraw.Draw(org_image)
+        detections = []
 
-        # select scores
-        result = []
-        # folder_name = uuid.uuid4().hex
-        # if os.path.isdir(folder_name) == False:
-        #     os.mkdir(folder_name)
+        for index, model_name in enumerate(CKPT_MODEL_NAME):
 
-        if boxes is not None:
+            classify_results = classify_faces(faces)
+            detections.append(classify_results)
 
-            for index, box in enumerate(boxes):
-                area = [
-                    box.left(),
-                    box.top(),
-                    box.right(),
-                    box.bottom()
-                ]
-                face_classes = classify_results[index]
-                class_name = 'unknown'
-                img_fraction = 1.0
+            image = copy.copy(org_image)
 
-                posibility = 1
-                if len(face_classes) > 0:
-                    possible_class = face_classes[0]
-                    class_name = possible_class[0]
-                    num_of_photo = num_of_photos['user_checkin_' + class_name.replace(' ', '_')]
-                    face_classes[0].append(num_of_photo)
-                    posibility = possible_class[1]
+            draw = ImageDraw.Draw(image)
 
-                draw.rectangle(area, fill=None, outline=(0,255,0,120))
-                left = box.left()
-                if left < 0:
-                    left = 0
-                draw.text([(left, box.top() - 30)],
-                    class_name, 
+            # select scores
+            result = []
+            # folder_name = uuid.uuid4().hex
+            # if os.path.isdir(folder_name) == False:
+            #     os.mkdir(folder_name)
+
+            if boxes is not None:
+
+                for index, box in enumerate(boxes):
+                    area = [
+                        box.left(),
+                        box.top(),
+                        box.right(),
+                        box.bottom()
+                    ]
+                    face_classes = classify_results[index]
+                    class_name = 'unknown'
+                    img_fraction = 1.0
+
+                    posibility = 1
+                    if len(face_classes) > 0:
+                        possible_class = face_classes[0]
+                        class_name = possible_class[0]
+                        num_of_photo = num_of_photos['user_checkin_' + class_name.replace(' ', '_')]
+                        face_classes[0].append(num_of_photo)
+                        posibility = possible_class[1]
+
+                    draw.rectangle(area, fill=None, outline=(0,255,0,120))
+                    left = box.left()
+                    if left < 0:
+                        left = 0
+                    draw.text([(left, box.top() - 30)],
+                        class_name, 
+                        fill=(0,255,0,120))
+                    draw.text([(left, box.top() - 20)],
+                        str(posibility), 
+                        fill=(0,255,0,120))
+                    draw.text([(left, box.top() - 10)],
+                        str(num_of_photo),
+                        fill=(0,255,0,120))
+
+            else:
+                draw.text([10, 10],
+                    'Cannot detect faces', 
                     fill=(0,255,0,120))
-                draw.text([(left, box.top() - 20)],
-                    str(posibility), 
-                    fill=(0,255,0,120))
-                draw.text([(left, box.top() - 10)],
-                    str(num_of_photo),
-                    fill=(0,255,0,120))
 
-        else:
-            draw.text([10, 10],
-                'Cannot detect faces', 
-                fill=(0,255,0,120))
+            byte_io = BytesIO()
+            file_name = "./images/%s_result.jpg" % uuid.uuid4().hex
+            image.save(file_name, 'JPEG')
+            images.append(file_name)
 
-        byte_io = BytesIO()
-        file_name = "./images/%s_result.jpg" % uuid.uuid4().hex
-        org_image.save(file_name, 'JPEG')
-
-        return render_template('upload.html', image=file_name, detections=classify_results)
+        return render_template('upload.html', models=CKPT_MODEL_NAME, images=images, detections=detections)
         # return send_file(byte_io, mimetype='image/jpeg')
 
 
