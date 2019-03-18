@@ -405,9 +405,12 @@ def upload():
 
         detections = []
 
+        detection_data = []
+
         for index, model_name in enumerate(CKPT_MODEL_NAME):
 
-            classify_results = classify_faces(faces)
+            prediction_sess = prediction_sesses[index]
+            classify_results = classify_faces(faces, prediction_sess)
             detections.append(classify_results)
 
             image = copy.copy(org_image)
@@ -465,7 +468,15 @@ def upload():
             image.save(file_name, 'JPEG')
             images.append(file_name)
 
-        return render_template('upload.html', models=CKPT_MODEL_NAME, images=images, detections=detections)
+            detection = {
+                "image": filename,
+                "detections": classify_results,
+                "model_name": model_name
+            }
+
+            detection_data.append(detection)
+
+        return render_template('upload.html', detection_data=detection_data)
         # return send_file(byte_io, mimetype='image/jpeg')
 
 
