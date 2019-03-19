@@ -1,0 +1,17 @@
+body {
+  
+}
+
+.correct-input .btn {
+  border-top-left-radius: 0px !important;
+  border-top-right-radius: 0px !important;
+}
+
+.correct-input label:not(.active) {
+  background-color: transparent !important;
+  color: black !important;
+}
+
+.correct-input input {
+  display: none;
+}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-3">
+  <h1>Face Learning</h1>
+  <p>Help system learn and fix faces</p>
+  
+  <h4>Listing users</h4>
+
+  {% if users %}
+  {% for user in users %}
+  {% if user['done'] %}
+  {{ user['name'] }} - DONE<br>
+  {% else %}
+  <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}">{{ user['name'] }} - {{ user['time'] }} - {{ user['done'] }}</a> - last classify {{ user['last_classify'] }} - last updated {{ user['last_updated'] }}<br>
+  {% endif %}
+  {% endfor %}
+  {% else %}
+  There are no users
+  <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}">{{ user['name'] }} - {{ user['time'] }} - {{ user['done'] }}</a> - last classify {{ user['last_classify'] }} - last updated {{ user['last_updated'] }}<br>
+  {% endif %}
+</div>
+{% endblock %}

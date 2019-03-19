@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-3">
+  <h1>Face Learning</h1>
+  <p>Help system learn and fix faces</p>
+
+  <h5><a href="/classify">Back to user list</a></h5>
+  
+  <h4>Listing images of {{ user }}</h4>
+
+  {% if images %}
+    <form action="/save_classification" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="user_id" value="{{ user }}"/>
+      {% for image in images %}
+      {% set index = loop.index - 1 %}
+      {% if index % 4 == 0 or index == 0 %}
+      <div class="row mb-4">
+      {% endif %}
+      <div class="col-md-3">
+        <img src="{{ image['path'] }}" style="max-width: 100%"/><br>
+        <div class="row">
+          <div class="btn-group correct-input col-md-12" data-toggle="buttons">
+            <label class="btn btn-success {% if image['classify'] == 'correct' or image['classify'] == None %}active{% endif %} col-md-6">
+              <input type="radio" name="image-{{ image['name'] }}" value="correct" autocomplete="off" {% if image['classify'] == 'correct' or image['classify'] == None %}checked{% endif %}> Correct
+            </label>
+            <label class="btn btn-danger {% if image['classify'] == 'incorrect' %}active{% endif %} col-md-6">
+              <input type="radio" name="image-{{ image['name'] }}" value="incorrect" autocomplete="off" {% if image['classify'] == 'incorrect' %}checked{% endif %}> Incorrect
+            </label>
+          </div>
+        </div>
+      </div>
+      {% if index % 4 == 3 or loop.index == images|length %}
+      </div>
+      {% endif %}
+      {% endfor %}
+      <button type="submit" class="btn btn-primary" name="submit" value="{{ next_user }}">Save & Next</button>
+      <button type="submit" class="btn btn-primary" name="submit" value="">Save & Back</button>
+    </form>
+  {% else %}
+  There are no images
+  {% endif %}
+</div>
+{% endblock %}
+
+<script>
+  
+</script>

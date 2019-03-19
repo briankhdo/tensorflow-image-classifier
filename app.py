@@ -3,21 +3,27 @@ import re
 from io import BytesIO
 import decimal
 import flask.json
-from flask import Flask, send_file, request, jsonify, render_template, send_from_directory
+from flask import Flask, send_file, request, jsonify, render_template, send_from_directory, redirect
 from PIL import Image, ImageDraw, ExifTags, ImageFont
 import requests
 import numpy as np
 import tensorflow as tf
 import tensorflow as tf_classify
-import os
+import os, sys, time
 import json
 import uuid
 import base64
 import copy
+import glob
+import redis
 
 import cv2
 
+from stat import S_ISREG, ST_CTIME, ST_MODE
+
 from align_dlib import AlignDlib
+
+classify_redis = redis.Redis(host='localhost', port=6379, db=0)
 
 config = tf.ConfigProto()
 # config.gpu_options.allow_growth = True
@@ -118,28 +124,130 @@ def classify_faces(faces, classification_graph, label_lines):
                 results.append(result)
     return results
 
-@app.route('/results/json')
-def results_json():
-    file = request.args.get('job_id', "")
-    if os.path.isdir(file):
-        return send_file(file + "/result.json", mimetype='application/json')
-    else:
-        return jsonify(
-            code=404,
-            message="Invalid job_id"
-        )
+@app.route('/assets/<path:path>')
+def send_assets(path):
+    return send_from_directory('assets', path)
 
 @app.route('/images/<path:path>')
 def send_js(path):
     return send_from_directory('images', path)
 
+@app.route('/learning/<path:path>')
+def learning(path):
+    return send_from_directory('learning', path)
 
 @app.route('/')
-def index():
+def root():
    return render_template('upload.html')
 
-@app.route('/upload', methods=['POST'])
-def upload():
+@app.route('/training')
+def training():
+    return render_template('training.html')
+
+@app.route('/classify')
+def classify():
+
+    dirpath = './learning'
+    all_files = glob.glob(dirpath + '/*')
+    all_files.sort()
+
+    user_id = request.args.get('user_id')
+    if user_id:
+        dirpath = './learning/user_checkin_' + user_id
+        files = glob.glob(dirpath + '/*')
+        files.sort()
+        next_user = request.args.get('next')
+        current_user_index = all_files.index("./learning/user_checkin_" + user_id)
+        if current_user_index + 1 < len(all_files):
+            next_user = os.path.basename(all_files[current_user_index + 1]).replace("user_checkin_", "")
+
+        if next_user is None:
+            next_user = ''
+
+        images = []
+        for index, path in enumerate(files):
+            redis_key_name = 'user_' + user_id + ':' + os.path.basename(path)
+            classified = classify_redis.get(redis_key_name)
+            if classified:
+                classified = classified.decode('utf-8')
+            else:
+                classified = 'correct'
+            images.append({
+                'path': path[1:],
+                'name': os.path.basename(path),
+                'classify': classified
+            })
+
+        return render_template('classify_user.html', images=images, user=user_id, next_user=next_user)
+    else:
+
+        files = all_files
+
+        users = []
+        for index, path in enumerate(files):
+            if 'user_checkin_' in os.path.basename(path):
+                classify_done = True
+                username = os.path.basename(path).replace('user_checkin_', '')
+                last_classify = classify_redis.get("user_" + username + ":last_classify")
+                last_updated = classify_redis.get("user_" + username + ":last_updated")
+
+                current_time = time.time()
+
+                if last_classify:
+                    last_classify = float(last_classify)
+                else:
+                    last_classify = 0
+
+                if last_updated:
+                    last_updated = float(last_updated)
+                else:
+                    classify_redis.set("user_" + username + ":last_updated", current_time)
+                    last_updated = current_time
+
+                if last_classify < last_updated:
+                    classify_done = False
+
+
+                next_user = ''
+                if index + 1 < len(files):
+                    next_user = os.path.basename(files[index+1]).replace('user_checkin_', '')
+
+                user = {
+                    'name': username,
+                    'time': os.path.getctime(path),
+                    'done': classify_done,
+                    'last_updated': last_updated,
+                    'last_classify': last_classify,
+                    'next': next_user
+                }
+                users.append(user)
+
+
+        return render_template('classify_listing.html', users=users)
+    
+
+@app.route('/save_classification', methods=['POST'])
+def save_classification():
+    user_id = request.form.get('user_id')
+
+    images = {}
+    for key in request.form:
+        if key != 'user_id' and key != 'submit':
+            value = request.form.get(key)
+            print(value)
+            images[key] = value
+            print("user_" + user_id + ":" + key)
+            classify_redis.set("user_" + user_id + ":" + key.replace("image-", ''), value)
+
+    classify_redis.set('user_' + user_id + ':last_classify', time.time())
+
+    if request.form.get('submit') != '':
+        return redirect('./classify?user_id=' + request.form.get('submit'))
+    else:
+        return redirect('./classify')
+
+@app.route('/recognize', methods=['POST'])
+def recognize():
     file = request.files['image']
     if file:
         data = file.read()
@@ -180,9 +288,6 @@ def upload():
 
             # select scores
             result = []
-            # folder_name = uuid.uuid4().hex
-            # if os.path.isdir(folder_name) == False:
-            #     os.mkdir(folder_name)
 
             if boxes is not None:
 
@@ -233,240 +338,6 @@ def upload():
             detection_data.append(detection)
 
         return render_template('upload.html', detection_data=detection_data)
-        # return send_file(byte_io, mimetype='image/jpeg')
-
-
-        # boxes = image[0].tolist()
-        # scores = image[1].tolist()
-        # products = {}
-        # brands = {}
-        # brands["unsure"] = 0
-
-        # for i in range(0, len(scores) - 1):
-        #     if scores[i] > 0.8:
-        #         width, height = org_image.size
-        #         box = boxes[i]
-        #         area = [
-        #             int(box[1] * width),
-        #             int(box[0] * height),
-        #             int(box[3] * width),
-        #             int(box[2] * height)]
-        #         # crop image
-        #         out_path = folder_name + "/CROP_" + str(i) + ".JPG"
-        #         org_image.crop(area).save(out_path, 'JPEG')
-        #         cropped_img = tf.gfile.FastGFile(out_path, 'rb').read()
-        #         detections = classify_object(cropped_img)
-
-        #         result.append({
-        #             'box': area,
-        #             'score': scores[i],
-        #             'name': detections
-        #         })
-
-        #         object_name = "unsure"
-        #         object_score = 1
-        #         if len(detections) > 0:
-        #             object_name = detections[0][0]
-        #             object_score = detections[0][1]
-
-        #         if object_name not in products:
-        #             products[object_name] = 0
-
-        #         products[object_name] += 1
-
-        #         if "coke" not in brands:
-        #             brands["coke"] = 0
-
-        #         if object_name != "unsure":
-        #             brands["coke"] += 1
-        #         else:
-        #             brands["unsure"] += 1
-
-        #         draw.rectangle(area, fill=None, outline=(0,255,0,120))
-        #         draw.text([(int(box[1] * width), int(box[0] * height) - 20)],
-        #             object_name, 
-        #             fill=(0,255,0,120))
-        #         draw.text([(int(box[1] * width), int(box[0] * height) - 10)],
-        #             str(object_score), 
-        #             fill=(0,255,0,120))
-
-        #         # result.append({
-        #         #     'box': box,
-        #         #     'score': scores[i],
-        #         #     'name': detections
-        #         # })
-
-        # org_image.save(folder_name + "/result.jpg", 'JPEG')
-        # with open(folder_name + "/result.json", 'w') as outfile:
-        #     json.dump({
-        #         "products": products,
-        #         "brands": brands
-        #     }, outfile)
-
-        # return jsonify(
-            # products=products,
-            # brands=brands,
-            # job_id=folder_name
-        # )
-
-
-# @app.route('/upload/json', methods=['POST'])
-# def upload_json():
-#     file = request.files['image']
-#     if file:
-#         data = file.read()
-#         org_image = Image.open(BytesIO(data))
-#         for orientation in ExifTags.TAGS.keys() : 
-#             if ExifTags.TAGS[orientation]=='Orientation' : break
-#         if org_image._getexif() != None:
-#             exif=dict(org_image._getexif().items())
-#             if orientation in exif:
-#                 if   exif[orientation] == 3 : 
-#                     org_image=org_image.rotate(180, expand=True)
-#                 elif exif[orientation] == 6 : 
-#                     org_image=org_image.rotate(270, expand=True)
-#                 elif exif[orientation] == 8 : 
-#                     org_image=org_image.rotate(90, expand=True)
-
-#         size = 1600,1600
-#         org_image.thumbnail(size,Image.ANTIALIAS)
-        
-#         image = detect_objects(org_image)
-
-#         draw = ImageDraw.Draw(org_image)
-
-#         # select scores
-#         result = []
-#         folder_name = uuid.uuid4().hex
-#         if os.path.isdir(folder_name) == False:
-#             os.mkdir(folder_name)
-
-#         boxes = image[0].tolist()
-#         scores = image[1].tolist()
-#         products = {}
-#         brands = {}
-#         brands["unsure"] = 0
-
-#         for i in range(0, len(scores) - 1):
-#             if scores[i] > 0.8:
-#                 width, height = org_image.size
-#                 box = boxes[i]
-#                 area = [
-#                     int(box[1] * width),
-#                     int(box[0] * height),
-#                     int(box[3] * width),
-#                     int(box[2] * height)]
-#                 # crop image
-#                 out_path = folder_name + "/CROP_" + str(i) + ".JPG"
-#                 org_image.crop(area).save(out_path, 'JPEG')
-#                 cropped_img = tf.gfile.FastGFile(out_path, 'rb').read()
-#                 detections = classify_object(cropped_img)
-
-#                 result.append({
-#                     'box': area,
-#                     'score': scores[i],
-#                     'name': detections
-#                 })
-
-#         return jsonify(result)
-
-# @app.route('/upload/image', methods=['POST'])
-# def upload_image():
-#     file = request.files['image']
-#     if file:
-#         data = file.read()
-#         org_image = Image.open(BytesIO(data))
-#         image = detect_objects(org_image)
-
-#         # select scores
-#         result = []
-#         draw = ImageDraw.Draw(org_image)
-
-
-#         boxes = image[0].tolist()
-#         scores = image[1].tolist()
-#         for i in range(0, len(scores) - 1):
-#             if scores[i] > 0.6:
-#                 width, height = org_image.size
-#                 box = boxes[i]
-#                 area = [
-#                     int(box[1] * width),
-#                     int(box[0] * height),
-#                     int(box[3] * width),
-#                     int(box[2] * height)]
-#                 # crop image
-#                 out_path = "CROP_" + str(i) + ".JPG"
-#                 org_image.crop(area).save(out_path, 'JPEG')
-#                 cropped_img = tf.gfile.FastGFile(out_path, 'rb').read()
-#                 detections = classify_object(cropped_img)
-
-#                 object_name = "undefined"
-#                 if len(detections) > 0:
-#                     object_name = detections[0][0]
-#                 draw.rectangle(area, fill=None, outline=(0,255,0,120))
-#                 draw.text([(int(box[1] * width), int(box[0] * height) - 20)],
-#                     object_name, 
-#                     fill=(0,255,0,120))
-
-#                 result.append({
-#                     'box': box,
-#                     'score': scores[i],
-#                     'name': detections
-#                 })
-
-
-#         byte_io = BytesIO()
-#         org_image.save(byte_io, 'JPEG')
-#         byte_io.seek(0)
-
-#         return send_file(byte_io, mimetype='image/jpeg')
-
-# @app.route('/url/image')
-# def url_image():
-#     default_url = 'http://weather.goodmaps.co/IMG_1426.jpg'
-#     url = request.args.get('url', default_url)
-#     r = requests.get(url)
-#     org_image = Image.open(BytesIO(r.content))
-#     image = detect_objects(org_image)
-
-#     # select scores
-#     result = []
-#     draw = ImageDraw.Draw(org_image)
-
-#     boxes = image[0].tolist()
-#     scores = image[1].tolist()
-#     for i in range(0, len(scores) - 1):
-#         if scores[i] > 0.6:
-#             width, height = org_image.size
-#             box = boxes[i]
-#             area = [
-#                 int(box[1] * width),
-#                 int(box[0] * height),
-#                 int(box[3] * width),
-#                 int(box[2] * height)]
-#             # crop image
-#             out_path = "CROP_" + str(i) + ".JPG"
-#             org_image.crop(area).save(out_path, 'JPEG')
-#             cropped_img = tf.gfile.FastGFile(out_path, 'rb').read()
-#             detections = classify_object(cropped_img)
-
-#             draw.rectangle(area, fill=None, outline=(0,255,0,120))
-#             draw.text([(int(box[1] * width), int(box[0] * height) - 20)],
-#                 detections[0][0], 
-#                 fill=(0,255,0,120))
-
-#             result.append({
-#                 'box': box,
-#                 'score': scores[i],
-#                 'name': detections
-#             })
-
-
-#     byte_io = BytesIO()
-#     org_image.save(byte_io, 'JPEG')
-#     byte_io.seek(0)
-
-#     return send_file(byte_io, mimetype='image/jpeg')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8888)
