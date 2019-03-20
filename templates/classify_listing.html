@@ -23,7 +23,7 @@
         </td>
         {% if user['done'] %}
         <td>
-          {{ user['name'] }}
+          <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}">{{ user['name'] }}</a>
         </td>
         <td>
           DONE

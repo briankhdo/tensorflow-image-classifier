@@ -6,7 +6,7 @@
 
   <h5><a href="/classify">Back to user list</a></h5>
   
-  <h4>Listing images of {{ user }}</h4>
+  <h4>Listing images of {{ user }} ({{ images|length }} images - face filtered)</h4>
 
   {% if images %}
     <form action="/save_classification" method="post" enctype="multipart/form-data">
