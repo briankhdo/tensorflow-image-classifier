@@ -134,7 +134,30 @@ def send_js(path):
 
 @app.route('/learning/<path:path>')
 def learning(path):
-    return send_from_directory('learning', path)
+    # detect face also
+    image_path = os.path.join("./learning", path)
+    org_image = cv2.imread(image_path, )
+    image = cv2.cvtColor(org_image, cv2.COLOR_BGR2RGB)
+    box = align_dlib.getLargestFaceBoundingBox(image)
+    final_image = array2image(image)
+    draw = ImageDraw.Draw(final_image)
+
+    area = [
+        box.left(),
+        box.top(),
+        box.right(),
+        box.bottom()
+    ]
+
+    draw.rectangle(area, fill=None, outline=(0,255,0,120), width=2)
+
+    byte_io = BytesIO()
+    final_image.save(byte_io, 'JPEG')
+    byte_io.seek(0)
+
+    return send_file(byte_io, mimetype='image/jpeg')
+
+    # return send_from_directory('learning', path)
 
 @app.route('/')
 def root():
@@ -153,13 +176,13 @@ def classify():
 
     user_id = request.args.get('user_id')
     if user_id:
-        dirpath = './learning/user_checkin_' + user_id
+        dirpath = './learning/' + user_id
         files = glob.glob(dirpath + '/*')
         files.sort()
         next_user = request.args.get('next')
-        current_user_index = all_files.index("./learning/user_checkin_" + user_id)
+        current_user_index = all_files.index("./learning/" + user_id)
         if current_user_index + 1 < len(all_files):
-            next_user = os.path.basename(all_files[current_user_index + 1]).replace("user_checkin_", "")
+            next_user = os.path.basename(all_files[current_user_index + 1])
 
         if next_user is None:
             next_user = ''
@@ -172,11 +195,22 @@ def classify():
                 classified = classified.decode('utf-8')
             else:
                 classified = 'correct'
-            images.append({
-                'path': path[1:],
-                'name': os.path.basename(path),
-                'classify': classified
-            })
+
+            # detect face and move to a proper path
+            org_image = cv2.imread(path, )
+            image = cv2.cvtColor(org_image, cv2.COLOR_BGR2RGB)
+            faces = align_dlib.getFaceBoundingBoxes(image)
+
+            if faces is not None:
+                images.append({
+                    'path': path[1:],
+                    'name': os.path.basename(path),
+                    'classify': classified
+                })
+            else:
+                if not os.path.exists("./learning_no_faces/" + user_id):
+                    os.makedirs("./learning_no_faces/" + user_id)
+                os.rename(path, "./learning_no_faces/" + user_id + "/" + os.path.basename(path))
 
         return render_template('classify_user.html', images=images, user=user_id, next_user=next_user)
     else:
@@ -185,9 +219,9 @@ def classify():
 
         users = []
         for index, path in enumerate(files):
-            if 'user_checkin_' in os.path.basename(path):
+            if '_' not in os.path.basename(path):
                 classify_done = True
-                username = os.path.basename(path).replace('user_checkin_', '')
+                username = os.path.basename(path)
                 last_classify = classify_redis.get("user_" + username + ":last_classify")
                 last_updated = classify_redis.get("user_" + username + ":last_updated")
 
@@ -210,7 +244,7 @@ def classify():
 
                 next_user = ''
                 if index + 1 < len(files):
-                    next_user = os.path.basename(files[index+1]).replace('user_checkin_', '')
+                    next_user = os.path.basename(files[index+1])
 
                 user = {
                     'name': username,
@@ -238,6 +272,12 @@ def save_classification():
             images[key] = value
             print("user_" + user_id + ":" + key)
             classify_redis.set("user_" + user_id + ":" + key.replace("image-", ''), value)
+
+            if value == 'incorrect':
+                path = './learning/' + user_id + "/" + key.replace("image-", "")
+                if not os.path.exists("./learning_incorrect/" + user_id):
+                    os.makedirs("./learning_incorrect/" + user_id)
+                os.rename(path, "./learning_incorrect/" + user_id + "/" + os.path.basename(path))
 
     classify_redis.set('user_' + user_id + ':last_classify', time.time())
 

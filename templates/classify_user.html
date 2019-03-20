@@ -34,10 +34,12 @@
       {% endif %}
       {% endfor %}
       <button type="submit" class="btn btn-primary" name="submit" value="{{ next_user }}">Save & Next</button>
+      <a href="/classify?user_id={{ next_user }}" class="btn btn-primary">Next</a><br><br>
       <button type="submit" class="btn btn-primary" name="submit" value="">Save & Back</button>
     </form>
   {% else %}
-  There are no images
+  There are no images<br><br>
+  <a href="/classify?user_id={{ next_user }}" class="btn btn-primary">Next</a>
   {% endif %}
 </div>
 {% endblock %}
