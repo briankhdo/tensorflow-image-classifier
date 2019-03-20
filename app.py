@@ -257,7 +257,7 @@ def classify():
 
                 last_classify_text = 'never'
                 if last_classify > 0:
-                    last_classify_text = datetime.fromtimestamp(last_classify).strftime('%Y-%m-%d %H:%M:%S')
+                    last_classify_text = datetime.utcfromtimestamp(last_classify + 7*3600).strftime('%Y-%m-%d %H:%M:%S')
 
                 num_images = 0
                 if username in images_count:
@@ -267,7 +267,7 @@ def classify():
                     'name': username,
                     'time': os.path.getctime(path),
                     'done': classify_done,
-                    'last_updated': datetime.fromtimestamp(last_updated).strftime('%Y-%m-%d %H:%M:%S'),
+                    'last_updated': datetime.utcfromtimestamp(last_updated + 7*3600).strftime('%Y-%m-%d %H:%M:%S'),
                     'last_classify': last_classify_text,
                     'next': next_user,
                     'num_images': num_images
