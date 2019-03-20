@@ -4,6 +4,7 @@ from io import BytesIO
 import decimal
 import flask.json
 from flask import Flask, send_file, request, jsonify, render_template, send_from_directory, redirect
+from flask_basicauth import BasicAuth
 from PIL import Image, ImageDraw, ExifTags, ImageFont
 import requests
 import numpy as np
@@ -41,6 +42,12 @@ LABEL_PATHS = ['./tf_files/retrained_labels.txt', './tf_files_mar16/retrained_la
 align_dlib = AlignDlib(os.path.join(os.path.dirname(__file__), 'shape_predictor_68_face_landmarks.dat'))
 
 app = Flask(__name__)
+app.config['BASIC_AUTH_USERNAME'] = 'tensor'
+app.config['BASIC_AUTH_PASSWORD'] = 'dv~Gx"dyP6t$=[hg'
+app.config['BASIC_AUTH_FORCE'] = True
+
+basic_auth = BasicAuth(app)
+
 
 def image2array(image):
     (w, h) = image.size
