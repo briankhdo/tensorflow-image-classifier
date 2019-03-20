@@ -13,7 +13,7 @@
       <input type="hidden" name="user_id" value="{{ user }}"/>
       {% for image in images %}
       {% set index = loop.index - 1 %}
-      {% if index % 4 == 0 or index == 0 %}
+      {% if index % 2 == 0 or index == 0 %}
       <div class="row mb-4">
       {% endif %}
       <div class="col-md-3">
@@ -29,14 +29,12 @@
           </div>
         </div>
       </div>
-      {% if index % 4 == 3 or loop.index == images|length %}
+      {% if index % 2 == 1 or loop.index == images|length %}
       </div>
       {% endif %}
       {% endfor %}
-      <button type="submit" class="btn btn-primary" name="submit" value="{{ next_user }}">Save & Next</button>
-      <a href="/classify?user_id={{ next_user }}" class="btn btn-primary">Next</a><br><br>
+      <button type="submit" class="btn btn-primary" name="submit" value="{{ next_user }}">Save & Next</button><br><br>
       <button type="submit" class="btn btn-primary" name="submit" value="">Save & Back</button>
-      <a href="/classify" class="btn btn-primary">Back</a><br><br>
     </form>
   {% else %}
   There are no images<br><br>
