@@ -5,18 +5,55 @@
   <p>Help system learn and fix faces</p>
   
   <h4>Listing users</h4>
-
-  {% if users %}
-  {% for user in users %}
-  {% if user['done'] %}
-  {{ user['name'] }} - DONE<br>
-  {% else %}
-  <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}">{{ user['name'] }} - {{ user['time'] }} - {{ user['done'] }}</a> - last classify {{ user['last_classify'] }} - last updated {{ user['last_updated'] }}<br>
-  {% endif %}
-  {% endfor %}
-  {% else %}
-  There are no users
-  <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}">{{ user['name'] }} - {{ user['time'] }} - {{ user['done'] }}</a> - last classify {{ user['last_classify'] }} - last updated {{ user['last_updated'] }}<br>
-  {% endif %}
+  <table class="table table-strip">
+    <thead>
+      <th>No.</th>
+      <th>User</th>
+      <th>Status</th>
+      <th>Number of Images</th>
+      <th>Last Classify</th>
+      <th>Last Updatd</th>
+    </thead>
+    <tbody>
+      {% if users %}
+      {% for user in users %}
+      <tr>
+        <td>
+          {{ loop.index }}
+        </td>
+        {% if user['done'] %}
+        <td>
+          {{ user['name'] }}
+        </td>
+        <td>
+          DONE
+        </td>
+        {% else %}
+        <td>
+          <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}">{{ user['name'] }}</a>
+        </td>
+        <td>
+          New Images
+        </td>
+        {% endif %}
+        <td>
+          {{ user['num_images'] }}
+        </td>
+        <td>
+          {{ user['last_classify'] }}
+        </td>
+        <td>
+          {{ user['last_updated'] }}
+        </td>
+      </tr>
+      {% endfor %}
+      {% else %}
+      <tr>
+        There are no users
+        <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}">{{ user['name'] }} - {{ user['time'] }} - {{ user['done'] }}</a> - last classify {{ user['last_classify'] }} - last updated {{ user['last_updated'] }}
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
 </div>
 {% endblock %}

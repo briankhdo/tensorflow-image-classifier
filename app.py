@@ -16,6 +16,7 @@ import base64
 import copy
 import glob
 import redis
+from datetime import datetime
 
 import cv2
 
@@ -216,6 +217,13 @@ def classify():
     else:
 
         files = all_files
+        image_paths = glob.glob(os.path.join(dirpath, '**/*.png'))
+        images_count = {}
+        for path in image_paths:
+            username = os.path.dirname(path).replace("./learning/", "")
+            if username not in images_count:
+                images_count[username] = 0
+            images_count[username] += 1
 
         users = []
         for index, path in enumerate(files):
@@ -246,13 +254,22 @@ def classify():
                 if index + 1 < len(files):
                     next_user = os.path.basename(files[index+1])
 
+                last_classify_text = 'never'
+                if last_classify > 0:
+                    last_classify_text = datetime.utcfromtimestamp(last_classify).strftime('%Y-%m-%d %H:%M:%S')
+
+                num_images = 0
+                if username in images_count:
+                    num_images = images_count[username]
+
                 user = {
                     'name': username,
                     'time': os.path.getctime(path),
                     'done': classify_done,
-                    'last_updated': last_updated,
-                    'last_classify': last_classify,
-                    'next': next_user
+                    'last_updated': datetime.utcfromtimestamp(last_updated).strftime('%Y-%m-%d %H:%M:%S'),
+                    'last_classify': last_classify_text,
+                    'next': next_user,
+                    'num_images': num_images
                 }
                 users.append(user)
 
