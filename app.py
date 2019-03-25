@@ -267,8 +267,14 @@ def classify():
             if '_' not in os.path.basename(path):
                 classify_done = True
                 username = os.path.basename(path)
-                last_classify = classify_redis.get("user_" + username + ":last_classify")
-                last_updated = classify_redis.get("user_" + username + ":last_updated")
+                last_classify_key = "user_" + username + ":last_classify"
+                last_updated_key = "user_" + username + ":last_updated"
+                if date is not '':
+                    last_classify_key += ":" + date
+                    last_updated_key += ":" + date
+
+                last_classify = classify_redis.get(last_classify_key)
+                last_updated = classify_redis.get(last_updated_key)
 
                 current_time = time.time()
 
@@ -280,7 +286,7 @@ def classify():
                 if last_updated:
                     last_updated = float(last_updated)
                 else:
-                    classify_redis.set("user_" + username + ":last_updated", current_time)
+                    classify_redis.set(last_updated_key, current_time)
                     last_updated = current_time
 
                 if last_classify < last_updated:
@@ -336,7 +342,13 @@ def save_classification():
                     os.makedirs("./learning_incorrect/" + user_id)
                 os.rename(path, "./learning_incorrect/" + user_id + "/" + os.path.basename(path))
 
-    classify_redis.set('user_' + user_id + ':last_classify', time.time())
+    last_classify_key = "user_" + username + ":last_classify"
+    last_updated_key = "user_" + username + ":last_updated"
+    if date is not '':
+        last_classify_key += ":" + date
+        last_updated_key += ":" + date
+
+    classify_redis.set(last_classify_key, time.time())
 
     if request.form.get('submit') != '':
         return redirect('./classify?user_id=' + request.form.get('submit'))
