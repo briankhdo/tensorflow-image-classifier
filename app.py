@@ -353,6 +353,10 @@ def save_classification():
     if date is None:
         date = ''
 
+    dirpath = './learning' 
+    if date is not '':
+        dirpath += '_' + date
+
     images = {}
     for key in request.form:
         if key != 'user_id' and key != 'submit':
@@ -363,7 +367,7 @@ def save_classification():
             classify_redis.set("user_" + user_id + ":" + key.replace("image-", ''), value)
 
             if value == 'incorrect':
-                path = './learning/' + user_id + "/" + key.replace("image-", "")
+                path = dirpath + user_id + "/" + key.replace("image-", "")
                 if not os.path.exists("./learning_incorrect/" + user_id):
                     os.makedirs("./learning_incorrect/" + user_id)
                 os.rename(path, "./learning_incorrect/" + user_id + "/" + os.path.basename(path))
