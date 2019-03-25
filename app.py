@@ -267,10 +267,10 @@ def classify():
 
             if faces is not None:
                 if classified == 'incorrect':
-                    image_path = dirpath + "/" + user_id + "/" + os.path.basename(image_path)
+                    image_path = dirpath + "/" + user_id + "/" + os.path.basename(path)
                     if not os.path.exists("./learning_incorrect/" + user_id):
                         os.makedirs("./learning_incorrect/" + user_id)
-                    os.rename(image_path, "./learning_incorrect/" + user_id + "/" + os.path.basename(image_path))
+                    os.rename(image_path, "./learning_incorrect/" + user_id + "/" + os.path.basename(path))
                 else:
                     images.append({
                         'path': path[1:],
