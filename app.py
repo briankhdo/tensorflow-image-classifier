@@ -266,11 +266,17 @@ def classify():
             faces = align_dlib.getFaceBoundingBoxes(image)
 
             if faces is not None:
-                images.append({
-                    'path': path[1:],
-                    'name': os.path.basename(path),
-                    'classify': classified
-                })
+                if classified == 'incorrect':
+                    path = dirpath + "/" + user_id + "/" + os.path.basename(path)
+                    if not os.path.exists("./learning_incorrect/" + user_id):
+                        os.makedirs("./learning_incorrect/" + user_id)
+                    os.rename(path, "./learning_incorrect/" + user_id + "/" + os.path.basename(path))
+                else:
+                    images.append({
+                        'path': path[1:],
+                        'name': os.path.basename(path),
+                        'classify': classified
+                    })
             else:
                 if not os.path.exists("./learning_no_faces/" + user_id):
                     os.makedirs("./learning_no_faces/" + user_id)
