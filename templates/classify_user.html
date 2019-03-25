@@ -11,7 +11,7 @@
   {% if images %}
     <form action="/save_classification" method="post" enctype="multipart/form-data">
       <input type="hidden" name="user_id" value="{{ user }}"/>
-      <input type="hidden" name="date" value="{{ date }}"
+      <input type="hidden" name="date" value="{{ date }}"/>
       {% for image in images %}
       {% set index = loop.index - 1 %}
       {% if index % 2 == 0 or index == 0 %}
