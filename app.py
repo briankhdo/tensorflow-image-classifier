@@ -372,8 +372,8 @@ def save_classification():
                     os.makedirs("./learning_incorrect/" + user_id)
                 os.rename(path, "./learning_incorrect/" + user_id + "/" + os.path.basename(path))
 
-    last_classify_key = "user_" + username + ":last_classify"
-    last_updated_key = "user_" + username + ":last_updated"
+    last_classify_key = "user_" + user_id + ":last_classify"
+    last_updated_key = "user_" + user_id + ":last_updated"
     if date is not '':
         last_classify_key += ":" + date
         last_updated_key += ":" + date
