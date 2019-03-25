@@ -141,10 +141,14 @@ def send_assets(path):
 def send_js(path):
     return send_from_directory('images', path)
 
-@app.route('/learning/<path:path>')
-def learning(path):
+@app.route('/learning_<date>/<path:path>')
+def learning(date, path):
     # detect face also
-    image_path = os.path.join("./learning", path)
+    dirpath = "./learning"
+    if date:
+        dirpath += "_" + date
+    image_path = os.path.join(dirpath, path)
+    print(image_path)
     org_image = cv2.imread(image_path, )
     image = cv2.cvtColor(org_image, cv2.COLOR_BGR2RGB)
     box = align_dlib.getLargestFaceBoundingBox(image)
@@ -178,18 +182,37 @@ def training():
 
 @app.route('/classify')
 def classify():
+    date = ''
+    if 'date' in request.args:
+        date = request.args.get('date')
+    else:
+        first_learning_path = glob.glob('./learning*')[0]
+        date = first_learning_path.replace('./learning_', '').replace('./learning', '')
+        return redirect('/classify?date=' + date)
 
     dirpath = './learning'
+    if date is not '':
+        dirpath += "_" + date
+
     all_files = glob.glob(dirpath + '/*')
     all_files.sort()
 
+    excludes = ['learning_no_faces', 'learning.bak', 'learning_incorrect', 'learning_under_5']
+    all_learning = glob.glob('./learning*')
+    learning_folders = []
+    for folder in all_learning:
+        if folder.replace('./', '') not in excludes:
+            learning_folders.append(folder)
+
+    print(learning_folders)
+
     user_id = request.args.get('user_id')
     if user_id:
-        dirpath = './learning/' + user_id
-        files = glob.glob(dirpath + '/*')
+        user_dirpath = dirpath + "/" + user_id
+        files = glob.glob(user_dirpath + '/*')
         files.sort()
         next_user = request.args.get('next')
-        current_user_index = all_files.index("./learning/" + user_id)
+        current_user_index = all_files.index(dirpath + '/' + user_id)
         if current_user_index + 1 < len(all_files):
             next_user = os.path.basename(all_files[current_user_index + 1])
 
@@ -221,14 +244,14 @@ def classify():
                     os.makedirs("./learning_no_faces/" + user_id)
                 os.rename(path, "./learning_no_faces/" + user_id + "/" + os.path.basename(path))
 
-        return render_template('classify_user.html', images=images, user=user_id, next_user=next_user)
+        return render_template('classify_user.html', images=images, user=user_id, next_user=next_user, date=date)
     else:
 
         files = all_files
         image_paths = glob.glob(os.path.join(dirpath, '**/*.png'))
         images_count = {}
         for path in image_paths:
-            username = os.path.dirname(path).replace("./learning/", "")
+            username = os.path.dirname(path).replace(dirpath, "")
             if username not in images_count:
                 images_count[username] = 0
             images_count[username] += 1
@@ -282,12 +305,15 @@ def classify():
                 users.append(user)
 
 
-        return render_template('classify_listing.html', users=users)
+        return render_template('classify_listing.html', users=users, folders=learning_folders, date=date)
     
 
 @app.route('/save_classification', methods=['POST'])
 def save_classification():
     user_id = request.form.get('user_id')
+    date = request.form.get('date')
+    if date is None:
+        date = ''
 
     images = {}
     for key in request.form:

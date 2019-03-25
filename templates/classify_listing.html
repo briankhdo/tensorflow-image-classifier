@@ -1,9 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="container mt-3">
   <h1>Face Learning</h1>
   <p>Help system learn and fix faces</p>
   
+  <h4>Folders</h4>
+
+  <ul class="nav nav-tabs mb-3">
+    {% if folders %}
+    {% for folder in folders %}
+    {% set folder_date = folder | replace('./learning_', '') | replace('./learning', '') %}
+    <li class="nav-item">
+      <a class="nav-link {% if date == folder_date %}active{% endif %}" href="/classify?date={{ folder | replace('./learning_', '') | replace('./learning', '') }}">{{ folder | replace('./', '') }}</a>
+    </li>
+    {% endfor %}
+    {% endif %}
+  </ul>
+
   <h4>Listing users</h4>
   <table class="table table-strip">
     <thead>
@@ -23,14 +37,14 @@
         </td>
         {% if user['done'] %}
         <td>
-          <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}">{{ user['name'] }}</a>
+          <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}&date={{ date }}">{{ user['name'] }}</a>
         </td>
         <td>
           DONE
         </td>
         {% else %}
         <td>
-          <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}">{{ user['name'] }}</a>
+          <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}&date={{ date }}">{{ user['name'] }}</a>
         </td>
         <td>
           New Images
@@ -50,7 +64,6 @@
       {% else %}
       <tr>
         There are no users
-        <a href="/classify?user_id={{ user['name'] }}&next={{ user['next'] }}">{{ user['name'] }} - {{ user['time'] }} - {{ user['done'] }}</a> - last classify {{ user['last_classify'] }} - last updated {{ user['last_updated'] }}
       </tr>
       {% endif %}
     </tbody>
