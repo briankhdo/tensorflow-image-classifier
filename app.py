@@ -381,7 +381,7 @@ def save_classification():
     classify_redis.set(last_classify_key, time.time())
 
     if request.form.get('submit') != '':
-        return redirect('./classify?user_id=' + request.form.get('submit'))
+        return redirect('./classify?user_id=' + request.form.get('submit') + "&date=" + date)
     else:
         return redirect('./classify')
 
