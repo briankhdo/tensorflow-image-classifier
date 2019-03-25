@@ -257,7 +257,7 @@ def classify():
         image_paths = glob.glob(os.path.join(dirpath, '**/*.png'))
         images_count = {}
         for path in image_paths:
-            username = os.path.dirname(path).replace(dirpath, "")
+            username = os.path.dirname(path).replace(dirpath + "/", "")
             if username not in images_count:
                 images_count[username] = 0
             images_count[username] += 1
