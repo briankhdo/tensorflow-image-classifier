@@ -186,7 +186,13 @@ def classify():
     if 'date' in request.args:
         date = request.args.get('date')
     else:
-        first_learning_path = glob.glob('./learning*')[0]
+        excludes = ['learning_no_faces', 'learning.bak', 'learning_incorrect', 'learning_under_5']
+        all_learning = glob.glob('./learning*')
+        learning_folders = []
+        for folder in all_learning:
+            if folder.replace('./', '') not in excludes:
+                learning_folders.append(folder)
+        first_learning_path = learning_folders[0]
         date = first_learning_path.replace('./learning_', '').replace('./learning', '')
         return redirect('/classify?date=' + date)
 
