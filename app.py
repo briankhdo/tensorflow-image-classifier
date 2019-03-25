@@ -141,6 +141,32 @@ def send_assets(path):
 def send_js(path):
     return send_from_directory('images', path)
 
+@app.route('/learning/<path:path>')
+def learning_no_date(path):
+    # detect face also
+    image_path = os.path.join('./learning', path)
+    print(image_path)
+    org_image = cv2.imread(image_path, )
+    image = cv2.cvtColor(org_image, cv2.COLOR_BGR2RGB)
+    box = align_dlib.getLargestFaceBoundingBox(image)
+    final_image = array2image(image)
+    draw = ImageDraw.Draw(final_image)
+
+    area = [
+        box.left(),
+        box.top(),
+        box.right(),
+        box.bottom()
+    ]
+
+    draw.rectangle(area, fill=None, outline=(0,255,0,120), width=2)
+
+    byte_io = BytesIO()
+    final_image.save(byte_io, 'JPEG')
+    byte_io.seek(0)
+
+    return send_file(byte_io, mimetype='image/jpeg')
+
 @app.route('/learning_<date>/<path:path>')
 def learning(date, path):
     # detect face also
