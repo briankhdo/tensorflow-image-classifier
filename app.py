@@ -367,7 +367,7 @@ def save_classification():
             classify_redis.set("user_" + user_id + ":" + key.replace("image-", ''), value)
 
             if value == 'incorrect':
-                path = dirpath + user_id + "/" + key.replace("image-", "")
+                path = dirpath + "/" + user_id + "/" + key.replace("image-", "")
                 if not os.path.exists("./learning_incorrect/" + user_id):
                     os.makedirs("./learning_incorrect/" + user_id)
                 os.rename(path, "./learning_incorrect/" + user_id + "/" + os.path.basename(path))
