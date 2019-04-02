@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 align_dlib = AlignDlib(os.path.join(os.path.dirname(__file__), 'shape_predictor_68_face_landmarks.dat'))
 
+image_classify_redis = redis.Redis(host='localhost', port=6379, db=0)
 
 def main(input_dir, output_dir, crop_dim, multiple_faces):
     start_time = time.time()
@@ -52,7 +53,14 @@ def preprocess_image(input_path, output_path, crop_dim):
         logger.debug('Writing processed file: {}'.format(output_path))
         cv2.imwrite(output_path, image)
     else:
+        human_string = "noface"
+        score = 1
         logger.warning("Skipping filename: {}".format(input_path))
+        image_name = os.path.basename(input_path).replace(".png", "")
+        image_key = "image:class:"+image_name
+        image_value = "%s|%.2f" % (human_string, score * 100)
+        image_classify_redis.set(image_key, image_value)
+        print("Saved %s to redis (%s=%s)" % (image_name, image_key, image_value))
 
 def preprocess_image_multiple(input_path, output_path, crop_dim):
     """
