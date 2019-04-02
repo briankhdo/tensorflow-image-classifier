@@ -6,6 +6,9 @@ import sys
 import os
 import logging
 import time
+import redis
+
+image_classify_redis = redis.Redis(host='localhost', port=6379, db=0)
 
 logger = logging.getLogger(__name__)
 
@@ -74,16 +77,22 @@ def classify_image(image_path, image_output_dir):
       score = predictions[0][node_id]
       if score * 100 < 10:
         human_string = "unknown"
+        score = 1
       print('%s (score = %.5f)' % (human_string, score))
-      output_dir = os.path.join(image_output_dir, human_string)
-      output_path = os.path.join(image_output_dir, human_string, "%s_%.2f.png" % (os.path.basename(image_path).replace(".png", ""), score * 100))
-      if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-      print("Writing %s" % output_path)
-      f = open(output_path,"wb")
-      f.write(image_data)
-      f.close()
-      print("Written %s" % output_path)
+      # output_dir = os.path.join(image_output_dir, human_string)
+      # output_path = os.path.join(image_output_dir, human_string, "%s_%.2f.png" % (os.path.basename(image_path).replace(".png", ""), score * 100))
+      # if not os.path.exists(output_dir):
+      #   os.makedirs(output_dir)
+      # print("Writing %s" % output_path)
+      # f = open(output_path,"wb")
+      # f.write(image_data)
+      # f.close()
+      # print("Written %s" % output_path)
+      image_name = os.path.basename(image_path).replace(".png", "")
+      image_key = "image:class:"+image_name
+      image_value = "%s|%.2f" % (human_string, score * 100)
+      image_classify_redis.set(image_key, image_value)
+      print("Saved %s to redis (%s=%s)" % (image_name, image_key, image_value))
       break
 
 if __name__ == '__main__':
