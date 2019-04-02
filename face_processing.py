@@ -4,7 +4,7 @@ import logging
 import multiprocessing as mp
 import os
 import time
-
+import redis
 import cv2
 
 from align_dlib import AlignDlib
