@@ -6,6 +6,7 @@ import os
 import time
 import redis
 import cv2
+from PIL import Image, ImageFilter
 
 from align_dlib import AlignDlib
 
@@ -34,12 +35,24 @@ def main(input_dir, output_dir, crop_dim, multiple_faces):
         if multiple_faces == 'true':
             pool.apply_async(preprocess_image_multiple, (image_path, output_path, crop_dim))
         else:
-            pool.apply_async(preprocess_image, (image_path, output_path, crop_dim))
+            preprocess_image(image_path, output_path, crop_dim)
+            # pool.apply_async(preprocess_image, (image_path, output_path, crop_dim))
 
     pool.close()
     pool.join()
     logger.info('Completed in {} seconds'.format(time.time() - start_time))
 
+def calculate_brightness(image):
+    greyscale_image = image.convert('L')
+    histogram = greyscale_image.histogram()
+    pixels = sum(histogram)
+    brightness = scale = len(histogram)
+
+    for index in range(0, scale):
+        ratio = histogram[index] / pixels
+        brightness += ratio * (-scale + index)
+
+    return 1 if brightness == 255 else brightness / scale
 
 def preprocess_image(input_path, output_path, crop_dim):
     """
@@ -50,8 +63,17 @@ def preprocess_image(input_path, output_path, crop_dim):
     """
     image = _process_image(input_path, crop_dim)
     if image is not None:
-        logger.debug('Writing processed file: {}'.format(output_path))
-        cv2.imwrite(output_path, image)
+        # print('Writing processed file: {}'.format(output_path))
+        # pil_image = cv2.imencode('.jpg', image)[1].tostring()
+        pil_image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        image_brightness = calculate_brightness(pil_image)
+        if image_brightness <= 0.25:
+            print("Ignored: {}. Reason: low brightness ({})".format(output_path, image_brightness))
+            return
+        enhanced_pil_image = pil_image.filter(ImageFilter.DETAIL)
+        enhanced_pil_image = pil_image.filter(ImageFilter.EDGE_ENHANCE)
+        enhanced_pil_image.save(output_path.replace("png", "jpg"), "JPEG")
+        # cv2.imwrite(output_path, image)
     else:
         human_string = "noface"
         score = 1
